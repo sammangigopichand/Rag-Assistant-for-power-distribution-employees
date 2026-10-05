@@ -1,0 +1,10 @@
+{% extends 'auth.html' %}
+{% block title %}Create account · Utility Knowledge{% endblock %}
+{% block auth_heading %}Your workspace awaits.{% endblock %}
+{% block auth_description %}Create an account to get started with Utility Knowledge.{% endblock %}
+{% block form_id %}registerForm{% endblock %}
+{% block name_field %}<div class="field"><label for="name">Full name</label><input id="name" name="name"
+        autocomplete="name" placeholder="Enter your full name" required></div>{% endblock %}
+{% block password_autocomplete %}new-password{% endblock %}
+{% block submit_label %}Create account{% endblock %}
+{% block auth_switch %}Already have an account? <a href="/login-page">Sign in</a>{% endblock %}

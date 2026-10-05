@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}RAG process explanation · Utility Knowledge{% endblock %}
+{% block content %}
+<style>
+  .explanation-nav{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .explanation-nav .employee-chip{display:flex;align-items:center;gap:9px;padding:5px 12px 5px 6px;border:1px solid #dce6e4;border-radius:12px;background:white;color:#31565b;font-size:14px;font-weight:650}
+  .explanation-nav .employee-avatar{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#087f72;color:white;font-size:13px;font-weight:750}
+  .explanation-nav a{padding:8px 11px;border-radius:9px;color:#31565b;text-decoration:none;font-size:14px;font-weight:600}
+  .explanation-nav a:hover{background:#eaf3f1;color:#087f72}
+  .explanation-nav a:focus-visible{outline:3px solid #32b7a0;outline-offset:2px}
+  @media(max-width:650px){.explanation-nav{width:100%;gap:4px}.explanation-nav .employee-chip{padding:4px 9px 4px 5px;font-size:13px}.explanation-nav .employee-avatar{width:26px;height:26px}.explanation-nav a{padding:7px 8px;font-size:13px}}
+</style>
+<main style="max-width:1000px;margin:0 auto;padding:30px 22px 60px;font-family:system-ui,sans-serif;color:#17343c">
+  <header style="display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:10px 0 24px;border-bottom:1px solid #dce7e1">
+    <div><div style="font-size:12px;letter-spacing:.12em;color:#52717a">RAG PROCESS EXPLANATION</div><h1 style="margin:6px 0">Understand the work before you start</h1><p style="margin:0;color:#60766c">The assistant searches utility documents and explains the retrieved procedure with sources.</p></div>
+    <nav class="explanation-nav" aria-label="Employee navigation"><span class="employee-chip"><span class="employee-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span>{{ user.name }}</span><a href="/dashboard">My progress</a><a href="/employee/assistant">Knowledge assistant</a><a href="/logout">Sign out</a></nav>
+  </header>
+  <form id="explanation-form" style="margin:24px 0;padding:20px;background:white;border:1px solid #dce7e1;border-radius:14px">
+    <label for="work-question" style="display:block;font-weight:650;margin-bottom:8px">Describe the work process you need explained</label>
+    <textarea id="work-question" rows="3" maxlength="1000" required placeholder="Include the equipment and task, for example: Explain the documented steps for distribution transformer installation." style="box-sizing:border-box;width:100%;padding:13px;border:1px solid #cbd8d1;border-radius:9px;font:inherit;resize:vertical"></textarea>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px">
+      <small style="color:#60766c">Only instructions supported by retrieved documents will be included. Review the preview, then choose whether to add it to your progress.</small>
+      <button id="explain-button" type="submit" style="padding:12px 17px;border:0;border-radius:9px;background:#087f72;color:white;font-weight:650;cursor:pointer">Explain process</button>
+    </div>
+  </form>
+  <p id="explanation-status" role="status" aria-live="polite"></p>
+  <section id="explanation-result" aria-live="polite"></section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const form=document.getElementById('explanation-form');
+  const input=document.getElementById('work-question');
+  const button=document.getElementById('explain-button');
+  const status=document.getElementById('explanation-status');
+  const result=document.getElementById('explanation-result');
+  function addText(parent,tag,text,style='') { const el=document.createElement(tag); el.textContent=text; if(style) el.style.cssText=style; parent.append(el); return el; }
+  function render(data) {
+    result.replaceChildren();
+    const card=document.createElement('article'); card.style.cssText='padding:22px;background:white;border:1px solid #dce7e1;border-radius:14px';
+    addText(card,'h2',data.title,'margin:0 0 10px');
+    if(data.status==='needs_review') addText(card,'p','Partial procedure: retrieved documents support the steps shown, but do not establish a complete sequence. Confirm missing details with your supervisor before proceeding.','padding:11px;background:#fff5df;color:#735214;border-radius:8px;line-height:1.5');
+    addText(card,'p',data.description||'RAG generated this explanation from retrieved utility documents.','line-height:1.65;color:#4d6259');
+    for(const [heading,items] of [['Before you begin',data.prerequisites],['Safety notes',data.safety_notes]]) {
+      if(!items?.length) continue; addText(card,'h3',heading,'margin-bottom:6px'); const ul=document.createElement('ul');
+      items.forEach(item=>addText(ul,'li',item,'margin:5px 0')); card.append(ul);
+    }
+    addText(card,'h3','Document-supported steps','margin:22px 0 8px');
+    const ol=document.createElement('ol'); ol.style.paddingLeft='24px';
+    data.steps.forEach(step=>{ const li=document.createElement('li'); li.style.cssText='padding:9px 0;line-height:1.55;min-width:0'; addText(li,'strong',step.title); addText(li,'div',step.description,'color:#4d6259;overflow-wrap:anywhere'); addText(li,'small',`Source: ${step.source}`,'display:block;max-width:100%;margin-top:4px;color:#72857b;overflow-wrap:anywhere;word-break:break-word'); ol.append(li); }); card.append(ol);
+    if(data.sources?.length) {
+      addText(card,'h3','Retrieved sources','margin:20px 0 6px');
+      const sources=document.createElement('ul'); sources.style.cssText='margin:0;padding-left:22px;max-width:100%;overflow-wrap:anywhere;word-break:break-word';
+      data.sources.forEach(source=>addText(sources,'li',source,'margin:5px 0;color:#60766c;overflow-wrap:anywhere;word-break:break-word'));
+      card.append(sources);
+    }
+    const save=document.createElement('button'); save.type='button'; save.textContent='Add this process to my progress'; save.style.cssText='display:inline-block;margin:16px 10px 0 0;padding:11px 14px;border:0;background:#087f72;color:white;border-radius:8px;font:inherit;font-weight:650;cursor:pointer';
+    save.addEventListener('click',async()=>{
+      save.disabled=true; status.textContent='Adding process to your progress…';
+      try {
+        const response=await fetch('/employee/processes/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({save_token:data.save_token})});
+        const saved=await response.json(); if(!response.ok) throw new Error(saved.detail||'Could not save this process.');
+        save.remove(); status.textContent='Process added to your progress.';
+        const link=document.createElement('a'); link.href='/dashboard'; link.textContent='Open project progress'; link.style.cssText='display:inline-block;margin-top:16px;padding:11px 14px;background:#087f72;color:white;text-decoration:none;border-radius:8px;font-weight:650'; card.append(link);
+      } catch(error) { status.textContent=error.message; save.disabled=false; }
+    });
+    card.append(save);
+    result.append(card);
+  }
+  form.addEventListener('submit',async event=>{
+    event.preventDefault(); button.disabled=true; status.textContent='Searching the knowledge base and generating the explanation…'; result.replaceChildren();
+    try {
+      const response=await fetch('/employee/processes/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:input.value.trim()})});
+      if(response.status===401){location.href='/login-page';return;}
+      const data=await response.json(); if(!response.ok) throw new Error(data.detail||'Could not generate an explanation.');
+      render(data); status.textContent=data.status==='needs_review'?'Preview ready. Review the partial-procedure note before deciding whether to add it to progress.':'Preview ready. It has not been added to your progress.';
+    } catch(error) { status.textContent=error.message; }
+    finally { button.disabled=false; }
+  });
+})();
+</script>
+{% endblock %}

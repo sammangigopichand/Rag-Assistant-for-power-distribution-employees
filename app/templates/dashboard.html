@@ -1,0 +1,1208 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Utility Knowledge Assistant
+{% endblock %}
+
+{% block content %}
+
+{% include 'chat_styles.html' %}
+
+<div class="app-shell chat-shell">
+
+    <!-- ========================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================= -->
+
+    <aside class="sidebar">
+
+        <a class="brand" href="/dashboard">
+
+            <span class="brand-mark" aria-hidden="true">
+                &#9889;
+            </span>
+
+            <span>
+                Utility Knowledge
+                <small>EMPLOYEE WORKSPACE</small>
+            </span>
+
+        </a>
+
+
+        <button
+            class="new-chat"
+            id="new-chat"
+            type="button"
+        >
+            <span aria-hidden="true">+</span>
+            New conversation
+        </button>
+
+
+        <nav aria-label="Workspace">
+
+            <div class="nav-label">
+                WORKSPACE
+            </div>
+
+            <a
+                class="nav-item active"
+                href="/employee/assistant"
+                aria-current="page"
+            >
+                <span aria-hidden="true">
+                    &#9707;
+                </span>
+
+                Knowledge assistant
+            </a>
+
+            <a class="nav-item" href="/dashboard"><span aria-hidden="true">&#9745;</span>Project progress</a>
+            <a class="nav-item" href="/employee/explanation-page"><span aria-hidden="true">&#10022;</span>Explain a process with RAG</a>
+
+        </nav>
+
+
+        <div class="conversation-list">
+
+            <div class="nav-label">
+                THIS SESSION
+            </div>
+
+            <div id="session-empty" class="sidebar-starters">
+                <p>Start with a common utility question:</p>
+                <button type="button" data-question="What safety precautions should I take before maintaining electrical equipment?">Electrical safety <span aria-hidden="true">↗</span></button>
+                <button type="button" data-question="What maintenance tests are recommended for electrical equipment?">Equipment maintenance <span aria-hidden="true">↗</span></button>
+            </div>
+
+            <ol id="session-questions"></ol>
+
+        </div>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-note">
+
+                <strong>
+                    Answers with context.
+                </strong>
+
+                Ask in your own words.
+                Find guidance from your utility knowledge base.
+
+            </div>
+
+
+            <a
+                class="nav-item"
+                href="/logout"
+            >
+                Sign out
+
+                <span aria-hidden="true">
+                    &#8599;
+                </span>
+            </a>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- ========================= -->
+    <!-- WORKSPACE -->
+    <!-- ========================= -->
+
+    <div class="workspace">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+
+                <strong class="workspace-title">
+                    Knowledge assistant
+                </strong>
+
+                <span class="workspace-subtitle">
+                    Your utility knowledge, one question away
+                </span>
+
+            </div>
+
+
+            <div class="profile">
+
+                <div
+                    class="avatar"
+                    aria-hidden="true"
+                >
+                    {{ user.name[:1]|upper }}
+                </div>
+
+
+                <div
+                    class="profile-name"
+                    title="{{ user.email }}"
+                >
+                    {{ user.name }}
+
+                    <small>
+                        {{ user.role|title }} account
+                    </small>
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- ========================= -->
+        <!-- CHAT LAYOUT -->
+        <!-- ========================= -->
+
+        <main class="chat-layout">
+
+
+            <div class="chat-main">
+
+                <!-- WELCOME SECTION -->
+
+                <section
+                    class="chat-welcome"
+                    id="chat-welcome"
+                    aria-labelledby="welcome-title"
+                >
+
+                    <div
+                        class="assistant-symbol"
+                        aria-hidden="true"
+                    >
+                        &#10022;
+                    </div>
+
+
+                    <div class="eyebrow">
+                        Built for your everyday questions
+                    </div>
+
+
+                    <h1 id="welcome-title">
+                        What would you like to know?
+                    </h1>
+
+
+                    <p>
+                        Explore electrical safety,
+                        grid standards,
+                        maintenance procedures,
+                        transformers,
+                        reliability,
+                        and utility operations.
+                    </p>
+
+
+
+                    <!-- Suggested questions -->
+
+                    <div
+                        class="suggestions"
+                        aria-label="Suggested questions"
+                    >
+
+
+                        <button
+                            type="button"
+                            class="suggestion"
+                            data-question="What safety precautions should I take before maintaining electrical equipment?"
+                        >
+
+                            <span class="suggestion-category">
+                                &#9889; Electrical safety
+                            </span>
+
+                            <span>
+                                What should I check before electrical maintenance?
+                            </span>
+
+                            <span
+                                class="suggestion-arrow"
+                                aria-hidden="true"
+                            >
+                                &#8599;
+                            </span>
+
+                        </button>
+
+
+
+                        <button
+                            type="button"
+                            class="suggestion"
+                            data-question="What are the key requirements for coordinating system restoration?"
+                        >
+
+                            <span class="suggestion-category">
+                                &#9637; Grid &amp; reliability
+                            </span>
+
+                            <span>
+                                How is system restoration coordinated?
+                            </span>
+
+                            <span
+                                class="suggestion-arrow"
+                                aria-hidden="true"
+                            >
+                                &#8599;
+                            </span>
+
+                        </button>
+
+
+
+                        <button
+                            type="button"
+                            class="suggestion"
+                            data-question="What maintenance tests are recommended for electrical equipment?"
+                        >
+
+                            <span class="suggestion-category">
+                                &#9881; Maintenance
+                            </span>
+
+                            <span>
+                                Which equipment maintenance tests are recommended?
+                            </span>
+
+                            <span
+                                class="suggestion-arrow"
+                                aria-hidden="true"
+                            >
+                                &#8599;
+                            </span>
+
+                        </button>
+
+
+
+                        <button
+                            type="button"
+                            class="suggestion"
+                            data-question="What are the common causes of transformer failure and what preventive measures should be taken?"
+                        >
+
+                            <span class="suggestion-category">
+                                &#9889; Transformer
+                            </span>
+
+                            <span>
+                                What causes transformer failures?
+                            </span>
+
+                            <span
+                                class="suggestion-arrow"
+                                aria-hidden="true"
+                            >
+                                &#8599;
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- ========================= -->
+                <!-- CONVERSATION -->
+                <!-- ========================= -->
+
+                <section
+                    id="conversation"
+                    class="conversation"
+                    aria-label="Questions and answers"
+                    hidden
+                >
+                </section>
+
+
+
+                <!-- ========================= -->
+                <!-- QUESTION COMPOSER -->
+                <!-- ========================= -->
+
+                <div class="composer-area">
+
+
+                    <div class="connection-note">
+
+                        <span
+                            class="status-dot"
+                            aria-hidden="true"
+                        ></span>
+
+                        Knowledge base connected
+
+                        <span class="connection-detail">
+                            &middot; FAISS + Gemini
+                        </span>
+
+                    </div>
+
+
+
+                    <form
+                        id="query-form"
+                        class="composer"
+                    >
+
+                        <label for="query">
+                            Ask Utility Knowledge
+                        </label>
+
+
+                        <textarea
+                            id="query"
+                            name="query"
+                            rows="3"
+                            maxlength="4000"
+                            placeholder="Ask a question about your utility documents..."
+                            aria-describedby="query-help"
+                            required
+                        ></textarea>
+
+
+                        <div class="composer-actions">
+
+                            <span id="query-help">
+                                Enter to send &middot;
+                                Shift + Enter for new line
+                            </span>
+
+
+                            <button
+                                type="submit"
+                                id="send-query"
+                            >
+                                Ask question
+
+                                <span aria-hidden="true">
+                                    &#8593;
+                                </span>
+                            </button>
+
+                        </div>
+
+                    </form>
+
+
+
+                    <p
+                        class="composer-note"
+                        id="query-status"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        Ask a question to search your utility knowledge base.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ========================= -->
+            <!-- SOURCES -->
+            <!-- ========================= -->
+
+            <aside
+                class="sources-panel"
+                aria-labelledby="sources-title"
+            >
+
+                <div class="sources-header">
+
+                    <div class="eyebrow">
+                        Behind the answer
+                    </div>
+
+                    <h2 id="sources-title">
+                        Source references
+                    </h2>
+
+                    <p>
+                        See where your answer comes from.
+                    </p>
+
+                </div>
+
+
+
+                <div class="sources-empty">
+
+                    <span
+                        class="source-symbol"
+                        aria-hidden="true"
+                    >
+                        &#9783;
+                    </span>
+
+                    <h3>
+                        No sources yet
+                    </h3>
+
+                    <p>
+                        Relevant document references will appear
+                        here after you ask a question.
+                    </p>
+
+                </div>
+
+
+
+                <div class="source-guide">
+
+                    <h3>
+                        Ask a more specific question
+                    </h3>
+
+                    <p>
+                        Include the equipment,
+                        procedure,
+                        standard,
+                        or issue you are working with.
+                    </p>
+
+                    <div class="source-example">
+                        “What checks are required before restoring
+                        a transmission line?”
+                    </div>
+
+                </div>
+
+
+
+                <div class="source-footer">
+
+                    Grounded in your documents.
+                    <br>
+                    Designed for your work.
+
+                </div>
+
+            </aside>
+
+        </main>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script>
+
+(() => {
+
+    const form =
+        document.getElementById("query-form");
+
+    const query =
+        document.getElementById("query");
+
+    const conversation =
+        document.getElementById("conversation");
+
+    const welcome =
+        document.getElementById("chat-welcome");
+
+    const history =
+        document.getElementById("session-questions");
+
+    const empty =
+        document.getElementById("session-empty");
+
+    const status =
+        document.getElementById("query-status");
+
+    const sendButton =
+        document.getElementById("send-query");
+
+    const sourcesPanel =
+        document.querySelector(".sources-panel");
+
+
+    let questionCount = 0;
+
+
+
+    // =====================================
+    // SUGGESTED QUESTIONS
+    // =====================================
+
+    document
+        .querySelectorAll("[data-question]")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    query.value =
+                        button.dataset.question;
+
+                    query.focus();
+
+                }
+            );
+
+        });
+
+
+
+    // =====================================
+    // ENTER TO SEND
+    // SHIFT + ENTER NEW LINE
+    // =====================================
+
+    query.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey &&
+                !event.isComposing
+            ) {
+
+                event.preventDefault();
+
+                form.requestSubmit();
+
+            }
+
+        }
+    );
+
+
+
+    // =====================================
+    // FORM SUBMIT
+    // =====================================
+
+    form.addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            const question =
+                query.value.trim();
+
+
+            if (!question) {
+
+                query.reportValidity();
+
+                return;
+
+            }
+
+
+            questionCount++;
+
+
+            welcome.hidden =
+                true;
+
+            conversation.hidden =
+                false;
+
+            empty.hidden =
+                true;
+
+
+
+            // Disable button
+
+            sendButton.disabled =
+                true;
+
+            sendButton.textContent =
+                "Searching...";
+
+
+
+            // =====================================
+            // CREATE QUESTION UI
+            // =====================================
+
+            const exchange =
+                document.createElement("article");
+
+            exchange.className =
+                "exchange";
+
+            exchange.id =
+                "question-" + questionCount;
+
+
+
+            const label =
+                document.createElement("h2");
+
+            label.className =
+                "question-label";
+
+            label.textContent =
+                "You";
+
+
+
+            const questionText =
+                document.createElement("p");
+
+            questionText.className =
+                "question-text";
+
+            questionText.textContent =
+                question;
+
+
+
+            const answer =
+                document.createElement("div");
+
+            answer.className =
+                "answer-placeholder";
+
+
+
+            const heading =
+                document.createElement("h3");
+
+            heading.textContent =
+                "Utility Knowledge";
+
+
+
+            const description =
+                document.createElement("div");
+
+            description.className =
+                "answer-content";
+
+            description.textContent =
+                "Searching the knowledge base...";
+
+            answer.append(
+                heading,
+                description
+            );
+
+
+            exchange.append(
+                label,
+                questionText,
+                answer
+            );
+
+
+            conversation.append(
+                exchange
+            );
+
+
+
+            // =====================================
+            // ADD QUESTION TO SIDEBAR
+            // =====================================
+
+            const item =
+                document.createElement("li");
+
+            const link =
+                document.createElement("a");
+
+
+            link.href =
+                "#" + exchange.id;
+
+            link.textContent =
+                question;
+
+            link.title =
+                question;
+
+
+            item.appendChild(
+                link
+            );
+
+
+            history.appendChild(
+                item
+            );
+
+
+
+            // Clear textbox
+
+            query.value =
+                "";
+
+
+            status.textContent =
+                "Searching documents and generating answer...";
+
+
+
+            try {
+
+
+                // =====================================
+                // CALL FASTAPI RAG ENDPOINT
+                // =====================================
+
+                const response =
+                    await fetch(
+                        "/ask",
+                        {
+
+                            method:
+                                "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    {
+                                        question:
+                                            question
+                                    }
+                                )
+
+                        }
+                    );
+
+
+
+                // =====================================
+                // LOGIN EXPIRED
+                // =====================================
+
+                if (
+                    response.status === 401
+                ) {
+
+                    window.location.href =
+                        "/login-page";
+
+                    return;
+
+                }
+
+
+
+                const data =
+                    await response.json();
+
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail ||
+                        "Unable to generate answer."
+                    );
+
+                }
+
+
+
+                // =====================================
+                // SHOW ANSWER
+                // =====================================
+
+                const formattedAnswer =
+                    marked.parse(data.answer || "");
+
+                description.innerHTML =
+                    DOMPurify.sanitize(formattedAnswer);
+
+
+                answer.className =
+                    "answer-response";
+
+
+                status.textContent =
+                    "Answer generated successfully from your knowledge base.";
+
+
+
+                // =====================================
+                // SHOW SOURCES
+                // =====================================
+
+                updateSources(
+                    data.sources || []
+                );
+
+
+            }
+
+            catch (error) {
+
+
+                console.error(
+                    "RAG Error:",
+                    error
+                );
+
+
+                description.textContent =
+                    "Unable to generate answer: "
+                    + error.message;
+
+
+                answer.className =
+                    "answer-placeholder";
+
+
+                status.textContent =
+                    "Unable to retrieve an answer.";
+
+
+            }
+
+            finally {
+
+
+                sendButton.disabled =
+                    false;
+
+
+                sendButton.innerHTML = `
+                    Ask question
+                    <span aria-hidden="true">
+                        &#8593;
+                    </span>
+                `;
+
+
+                exchange.scrollIntoView(
+                    {
+                        behavior:
+                            "smooth",
+
+                        block:
+                            "nearest"
+                    }
+                );
+
+
+                query.focus(
+                    {
+                        preventScroll:
+                            true
+                    }
+                );
+
+            }
+
+        }
+    );
+
+
+
+    // =====================================
+    // UPDATE SOURCE PANEL
+    // =====================================
+
+    function updateSources(sources) {
+
+
+        let html = `
+
+            <div class="sources-header">
+
+                <div class="eyebrow">
+                    Behind the answer
+                </div>
+
+                <h2 id="sources-title">
+                    Source references
+                </h2>
+
+                <p>
+                    Documents used to generate this answer.
+                </p>
+
+            </div>
+
+        `;
+
+
+
+        if (
+            sources &&
+            sources.length > 0
+        ) {
+
+
+            sources.forEach(
+                (source, index) => {
+
+
+                    html += `
+
+                        <div class="source-guide">
+
+                            <div class="eyebrow">
+                                Source ${index + 1}
+                            </div>
+
+                            <h3>
+                                ${escapeHTML(source)}
+                            </h3>
+
+                            <p>
+                                Relevant content was retrieved
+                                from this document.
+                            </p>
+
+                        </div>
+
+                    `;
+
+
+                }
+            );
+
+
+        }
+
+        else {
+
+
+            html += `
+
+                <div class="sources-empty">
+
+                    <span
+                        class="source-symbol"
+                        aria-hidden="true"
+                    >
+                        &#9783;
+                    </span>
+
+                    <h3>
+                        No source information
+                    </h3>
+
+                    <p>
+                        No source document was returned
+                        for this answer.
+                    </p>
+
+                </div>
+
+            `;
+
+
+        }
+
+
+
+        html += `
+
+            <div class="source-footer">
+
+                Grounded in your documents.
+                <br>
+                Designed for your work.
+
+            </div>
+
+        `;
+
+
+        sourcesPanel.innerHTML =
+            html;
+
+    }
+
+
+
+    // =====================================
+    // NEW CHAT
+    // =====================================
+
+    document
+        .getElementById("new-chat")
+        .addEventListener(
+            "click",
+            () => {
+
+
+                conversation.replaceChildren();
+
+                history.replaceChildren();
+
+
+                conversation.hidden =
+                    true;
+
+
+                welcome.hidden =
+                    false;
+
+
+                empty.hidden =
+                    false;
+
+
+                questionCount =
+                    0;
+
+
+                query.value =
+                    "";
+
+
+                status.textContent =
+                    "New conversation. Ask a question to search your utility knowledge base.";
+
+
+                resetSources();
+
+
+                query.focus();
+
+            }
+        );
+
+
+
+    // =====================================
+    // RESET SOURCE PANEL
+    // =====================================
+
+    function resetSources() {
+
+
+        sourcesPanel.innerHTML = `
+
+            <div class="sources-header">
+
+                <div class="eyebrow">
+                    Behind the answer
+                </div>
+
+                <h2 id="sources-title">
+                    Source references
+                </h2>
+
+                <p>
+                    See where your answer comes from.
+                </p>
+
+            </div>
+
+
+            <div class="sources-empty">
+
+                <span
+                    class="source-symbol"
+                    aria-hidden="true"
+                >
+                    &#9783;
+                </span>
+
+                <h3>
+                    No sources yet
+                </h3>
+
+                <p>
+                    Relevant document references
+                    will appear here after you ask a question.
+                </p>
+
+            </div>
+
+
+            <div class="source-guide">
+
+                <h3>
+                    Ask a more specific question
+                </h3>
+
+                <p>
+                    Include equipment,
+                    procedure,
+                    or standard names
+                    for better retrieval.
+                </p>
+
+            </div>
+
+
+            <div class="source-footer">
+
+                Grounded in your documents.
+                <br>
+                Designed for your work.
+
+            </div>
+
+        `;
+
+    }
+
+
+
+    // =====================================
+    // PREVENT HTML INJECTION
+    // =====================================
+
+    function escapeHTML(value) {
+
+
+        const element =
+            document.createElement("div");
+
+
+        element.textContent =
+            String(value);
+
+
+        return element.innerHTML;
+
+    }
+
+
+})();
+
+</script>
+
+{% endblock %}

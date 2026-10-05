@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Administrator dashboard · Utility Knowledge{% endblock %}
+{% block content %}
+<main style="max-width:1100px;margin:40px auto;padding:24px;font-family:system-ui,sans-serif;color:#17343c">
+  <header style="display:flex;justify-content:space-between;align-items:center;gap:20px">
+    <div><p style="text-transform:uppercase;letter-spacing:.12em;color:#52717a">Administrator dashboard</p><h1>Operations overview</h1><p>Welcome, {{ user.name }}. Manage employee access, review project progress, and process documents.</p></div>
+    <a href="/logout">Sign out</a>
+  </header>
+  <section style="display:flex;gap:16px;flex-wrap:wrap;margin:28px 0">
+    <article style="padding:20px;background:#eef5f3;border-radius:14px;min-width:160px"><strong>{{ employee_count }}</strong><div>Employees</div></article>
+    <article style="padding:20px;background:#eef5f3;border-radius:14px;min-width:160px"><strong>{{ process_count }}</strong><div>Work checklists</div></article>
+    <article style="padding:20px;background:#eef5f3;border-radius:14px;min-width:160px"><strong>{{ step_count }}</strong><div>Checklist steps</div></article>
+  </section>
+  <section style="padding:24px;border:1px solid #d6e3e0;border-radius:16px;margin:24px 0">
+    <h2>Document processing</h2><p>Rebuild embeddings from every supported file in <code>raw</code> and <code>knowledge_base</code>. The app uses the refreshed index after processing completes.</p>
+    <button id="reindex" type="button" style="padding:11px 18px">Process documents and rebuild embeddings</button>
+    <p id="job-message" role="status" aria-live="polite">{{ index_job.message }}</p>
+    <progress id="job-progress" max="{{ index_job.total or 1 }}" value="{{ index_job.processed or 0 }}" style="width:min(600px,100%)"></progress>
+  </section>
+  <section style="padding:24px;border:1px solid #d6e3e0;border-radius:16px">
+    <h2>Employee management</h2><p>Review each employee’s projects and progress, and enable or suspend account access.</p>
+    <p id="employee-status" role="status" aria-live="polite"></p>
+    <div id="employee-table">Loading employee activity…</div>
+  </section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const button = document.getElementById('reindex');
+  const message = document.getElementById('job-message');
+  const progress = document.getElementById('job-progress');
+  const table = document.getElementById('employee-table');
+  async function refreshJob() {
+    const response = await fetch('/admin/reindex/status');
+    if (response.status === 401 || response.status === 403) { location.href = '/login-page'; return; }
+    const job = await response.json();
+    message.textContent = job.message;
+    progress.max = Math.max(job.total || 1, 1); progress.value = job.processed || 0;
+    button.disabled = job.status === 'running' || job.status === 'queued';
+    if (job.status === 'running' || job.status === 'queued') setTimeout(refreshJob, 1000);
+  }
+  button.addEventListener('click', async () => {
+    button.disabled = true; message.textContent = 'Starting indexing…';
+    const response = await fetch('/admin/reindex', {method:'POST'});
+    if (!response.ok) { message.textContent = 'Unable to start indexing.'; button.disabled = false; return; }
+    refreshJob();
+  });
+  const employeeStatus=document.getElementById('employee-status');
+  async function loadEmployees() {
+    const response=await fetch('/admin/overview'); if(!response.ok) throw new Error(); const rows=await response.json();
+    if (!rows.length) { table.textContent = 'No employee accounts yet.'; return; }
+    const t = document.createElement('table'); t.style.cssText='width:100%;border-collapse:collapse';
+    const head = t.insertRow(); ['Employee','Email','Status','Steps','Progress','Account'].forEach(value => { const th=document.createElement('th'); th.textContent=value; th.style.cssText='text-align:left;padding:10px'; head.append(th); });
+    rows.forEach(row => {
+      const tr=t.insertRow();
+      [row.name,row.email,row.is_active?'Active':'Suspended',`${row.completed} / ${row.total}`,`${row.total ? Math.round(row.completed / row.total * 100) : 0}%`].forEach(value => { const td=tr.insertCell(); td.textContent=value; td.style.cssText='padding:10px;border-top:1px solid #d6e3e0'; });
+      const action=tr.insertCell(); action.style.cssText='padding:10px;border-top:1px solid #d6e3e0';
+      const toggle=document.createElement('button'); toggle.type='button'; toggle.textContent=row.is_active?'Suspend':'Reactivate';
+      toggle.addEventListener('click',async()=>{toggle.disabled=true;employeeStatus.textContent='Updating employee access…';try{const result=await fetch(`/admin/employees/${row.id}/active`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_active:!row.is_active})});if(!result.ok)throw new Error();employeeStatus.textContent=`${row.name}’s access updated.`;await loadEmployees();}catch{employeeStatus.textContent='Could not update employee access.';toggle.disabled=false;}}); action.append(toggle);
+      const detailRow=t.insertRow(); const detail=detailRow.insertCell(); detail.colSpan=6; detail.style.cssText='padding:0 10px 12px;border-bottom:1px solid #d6e3e0';
+      const disclosure=document.createElement('details'); const summary=document.createElement('summary'); summary.textContent=`Projects (${row.projects.length})`; summary.style.cssText='cursor:pointer;color:#087f72;font-weight:600;padding:7px 0'; disclosure.append(summary);
+      if(!row.projects.length){const p=document.createElement('p');p.textContent='No projects yet.';disclosure.append(p);} else {const ul=document.createElement('ul');row.projects.forEach(project=>{const li=document.createElement('li');li.textContent=`${project.title} — ${project.completed} of ${project.total} steps · ${project.status.replace('_',' ')}`;ul.append(li);});disclosure.append(ul);} detail.append(disclosure);
+    });
+    table.replaceChildren(t);
+  }
+  loadEmployees().catch(() => { table.textContent = 'Unable to load employee activity.'; });
+  refreshJob();
+})();
+</script>
+{% endblock %}

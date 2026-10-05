@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-layout">
+    <aside class="auth-story">
+        <a class="brand" href="/login-page"><span class="brand-mark" aria-hidden="true">ϟ</span><span>Utility
+                Knowledge<small>EMPLOYEE WORKSPACE</small></span></a>
+        <div class="story-content">
+            <div class="eyebrow">Built for the people who power us</div>
+            <h1>Knowledge that<br>keeps you<br><span>moving forward.</span></h1>
+            <p>A dedicated workspace for your utility team's knowledge, standards, and everyday work.</p>
+            <div class="story-lines" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="story-footer">Connected knowledge. Confident teams.</div>
+    </aside>
+    <main class="auth-main">
+        <div class="auth-card">
+            <div class="eyebrow">Your employee portal</div>
+            <h2>{% block auth_heading %}{% endblock %}</h2>
+            <p>{% block auth_description %}{% endblock %}</p>
+            <form id="{% block form_id %}{% endblock %}" data-auth-form>
+                {% block name_field %}{% endblock %}
+                <div class="field"><label for="email">Email address</label><input type="email" id="email" name="email"
+                        autocomplete="email" placeholder="you@company.com" required></div>
+                <div class="field"><label for="password">Password</label>
+                    <div class="password-wrap"><input type="password" id="password" name="password"
+                            autocomplete="{% block password_autocomplete %}current-password{% endblock %}"
+                            placeholder="Enter your password" required><button type="button" class="password-toggle"
+                            aria-label="Show password" aria-controls="password" aria-pressed="false">Show</button></div>
+                </div>
+                <button class="primary" type="submit">{% block submit_label %}{% endblock %} <span
+                        aria-hidden="true">↗</span></button>
+                <p id="message" class="message" role="status" aria-live="polite"></p>
+            </form>
+            <div class="auth-switch">{% block auth_switch %}{% endblock %}</div>
+            <p class="form-note">Utility Employee Knowledge Assistant</p>
+        </div>
+    </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const form = document.querySelector('[data-auth-form]');
+    const toggle = document.querySelector('.password-toggle');
+    toggle.addEventListener('click', () => {
+        const password = document.getElementById('password');
+        const show = password.type === 'password';
+        password.type = show ? 'text' : 'password';
+        toggle.textContent = show ? 'Hide' : 'Show';
+        toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        toggle.setAttribute('aria-pressed', String(show));
+    });
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const button = form.querySelector('[type="submit"]');
+        const message = document.getElementById('message');
+        const registering = form.id === 'registerForm';
+        const originalLabel = button.innerHTML;
+        message.textContent = '';
+        message.className = 'message';
+        button.disabled = true;
+        button.textContent = registering ? 'Creating account…' : 'Signing in…';
+        form.setAttribute('aria-busy', 'true');
+        const payload = { email: form.elements.email.value.trim(), password: form.elements.password.value };
+        if (registering) payload.name = form.elements.namedItem('name').value.trim();
+        try {
+            const response = await fetch(registering ? '/register' : '/login', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                const detail = Array.isArray(data.detail) ? data.detail.map(item => item.msg).join(' ') : data.detail;
+                throw new Error(typeof detail === 'string' ? detail : 'Something went wrong. Please try again.');
+            }
+            message.className = 'message success';
+            message.textContent = registering ? 'Account created. You can now sign in using the link below.' : 'Signed in. Opening your workspace…';
+            if (registering) form.reset();
+            else window.location.href = '/dashboard';
+        } catch (error) {
+            message.textContent = error instanceof TypeError ? 'Unable to connect. Please check your connection and try again.' : error.message;
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalLabel;
+            form.removeAttribute('aria-busy');
+        }
+    });
+</script>
+{% endblock %}

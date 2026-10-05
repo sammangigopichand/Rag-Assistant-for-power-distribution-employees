@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}My project progress · Utility Knowledge{% endblock %}
+{% block content %}
+<style>
+  .progress-page{max-width:1100px;margin:auto;padding:32px 22px 64px;color:#18343c}
+  .progress-head{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:8px 0 26px;border-bottom:1px solid #dce6e4}
+  .eyebrow{font-size:12px;letter-spacing:.13em;color:#52717a;font-weight:700}
+  .progress-head h1{margin:5px 0;font-size:clamp(30px,4vw,42px)}
+  .progress-head p{margin:0;color:#62767b}
+  .progress-nav{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .progress-nav .employee-chip{display:flex;align-items:center;gap:9px;padding:5px 12px 5px 6px;border:1px solid #dce6e4;border-radius:12px;background:white;color:#31565b;font-size:14px;font-weight:650}
+  .progress-nav .employee-avatar{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#087f72;color:white;font-size:13px;font-weight:750}
+  .progress-nav a{padding:8px 11px;border-radius:9px;color:#31565b;text-decoration:none;font-size:14px;font-weight:600;transition:background .15s,color .15s}
+  .progress-nav a:hover{background:#eaf3f1;color:#087f72}
+  .progress-nav a:focus-visible,.filter-button:focus-visible{outline:3px solid #32b7a0;outline-offset:2px}
+  .overview{display:flex;gap:12px;align-items:stretch;flex-wrap:wrap;margin:22px 0}
+  .metric{padding:13px 18px;background:white;border:1px solid #dce6e4;border-radius:12px;min-width:145px}
+  .metric strong{display:block;font-size:22px;line-height:1.3}
+  .metric span{color:#62767b;font-size:13px}
+  .new-process{margin-left:auto;align-self:center;padding:11px 15px;border-radius:9px;background:#087f72;color:white;text-decoration:none;font-weight:650}
+  .project-card{margin:18px 0;padding:0;border:1px solid #dce6e4;border-radius:16px;background:white;box-shadow:0 5px 20px #18343c08;overflow:hidden}
+  .project-top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;cursor:pointer;padding:19px 22px;list-style:none}
+  .project-top::-webkit-details-marker{display:none}
+  .project-top::before{content:'＋';display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:#eaf3f1;color:#087f72;font-weight:700}
+  .project-card[open]>.project-top::before{content:'−'}
+  .project-top h2{margin:0 0 5px;font-size:21px}
+  .project-summary{flex:1;min-width:190px}
+  .project-desc{white-space:pre-wrap;margin:5px 0 14px;color:#52676d}
+  .project-count{white-space:nowrap;font-weight:700;color:#087f72}
+  .project-content{padding:0 22px 22px}
+  .delete-checklist{display:block;margin:20px 0 0 auto;padding:10px 14px;border:1px solid #b64e3a;border-radius:9px;background:white;color:#9a3f2d;font:inherit;font-weight:650}
+  .delete-checklist:hover{background:#fff4f1}
+  .project-bar{width:100%;height:10px;margin:0 0 20px;accent-color:#087f72}
+  .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 20px}
+  .info-box{padding:14px 16px;border-radius:11px;background:#f3f7f6}
+  .info-box h3{margin:0 0 8px;font-size:15px}
+  .info-box ul{margin:0;padding-left:20px;color:#52676d}
+  .info-box li+li{margin-top:5px}
+  .review-note{padding:12px 14px;margin:12px 0;background:#fff5df;color:#735214;border-radius:9px}
+  .steps-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:18px 0 8px}
+  .steps-heading h3{margin:0;font-size:18px}
+  .step-filters{display:flex;gap:4px;padding:4px;border:1px solid #dce6e4;background:#f4f7f6;border-radius:12px}
+  .filter-button{border:0;border-radius:9px;background:transparent;padding:8px 13px;color:#52676d;font-size:13px;font-weight:650;white-space:nowrap;transition:background .15s,color .15s,box-shadow .15s}
+  .filter-button:hover{background:#e7efed;color:#18343c}
+  .filter-button[aria-pressed="true"]{background:#087f72;color:white;box-shadow:0 2px 5px #087f7233}
+  .step-row{display:grid;grid-template-columns:42px 24px minmax(0,1fr);gap:10px;align-items:start;padding:16px 8px;border-top:1px solid #e7eeea}
+  .step-row[hidden]{display:none}
+  .step-number{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#eaf3f1;color:#087f72;font-weight:750;font-size:13px}
+  .step-check{width:20px;height:20px;margin:5px 0 0;accent-color:#087f72;cursor:pointer}
+  .step-title{display:block;margin:1px 0 5px;font-weight:700;color:#18343c}
+  .step-description{margin:0;color:#52676d;white-space:pre-wrap;overflow-wrap:anywhere}
+  .step-source{display:block;max-width:100%;margin-top:7px;color:#72857b;font-size:12px;overflow-wrap:anywhere;word-break:break-word}
+  .step-row.is-done .step-title{text-decoration:line-through;color:#6b8077}
+  .step-row.is-done .step-number{background:#087f72;color:white}
+  .empty-state{padding:28px;border:1px solid #dce6e4;border-radius:16px;background:white}
+  #progress-status{min-height:22px;color:#9a4a36}
+  @media(max-width:650px){.progress-page{padding:22px 15px 45px}.progress-nav{width:100%;gap:4px}.progress-nav a{padding:7px 8px;font-size:13px}.project-top{padding:16px}.project-content{padding:0 16px 16px}.info-grid{grid-template-columns:1fr}.new-process{margin-left:0}.step-row{grid-template-columns:32px 22px minmax(0,1fr);gap:7px;padding:13px 2px}.steps-heading{align-items:flex-start}.step-filters{max-width:100%;overflow-x:auto}.filter-button{padding:7px 11px}}
+</style>
+<main class="progress-page">
+  <header class="progress-head">
+    <div><div class="eyebrow">EMPLOYEE WORKSPACE</div><h1>Project progress</h1><p>Follow each saved procedure step by step and keep your progress up to date.</p></div>
+    <nav class="progress-nav" aria-label="Employee navigation"><span class="employee-chip"><span class="employee-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span>{{ user.name }}</span><a href="/employee/explanation-page">Explain a process</a><a href="/employee/assistant">Knowledge assistant</a><a href="/logout">Sign out</a></nav>
+  </header>
+  <section class="overview" aria-label="Progress summary">
+    <article class="metric"><strong id="project-count">—</strong><span>Projects</span></article>
+    <article class="metric"><strong id="steps-count">—</strong><span>Steps completed</span></article>
+    <a class="new-process" href="/employee/explanation-page">＋ Explain a new process</a>
+  </section>
+  <div id="progress-status" role="status" aria-live="polite"></div>
+  <section id="project-list" aria-label="Project progress"><p>Loading your projects…</p></section>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+  const list = document.getElementById('project-list');
+  const status = document.getElementById('progress-status');
+  const el = (tag, className, text) => { const node=document.createElement(tag); if(className) node.className=className; if(text!==undefined) node.textContent=text; return node; };
+  function infoBox(title, values, warning=false) {
+    if (!values?.length) return null;
+    const box=el('section',`info-box${warning?' review-note':''}`); box.append(el('h3','',title));
+    const ul=el('ul'); values.forEach(value=>ul.append(el('li','',value))); box.append(ul); return box;
+  }
+  async function load() {
+    const response = await fetch('/employee/progress');
+    if (response.status === 401) { location.href = '/login-page'; return; }
+    if (!response.ok) throw new Error('Could not load project progress.');
+    const projects = await response.json();
+    const done = projects.reduce((n,p) => n + p.completed, 0);
+    const total = projects.reduce((n,p) => n + p.total, 0);
+    document.getElementById('project-count').textContent = projects.length;
+    document.getElementById('steps-count').textContent = `${done} / ${total}`;
+    list.replaceChildren();
+    if (!projects.length) {
+      const empty=el('article','empty-state'); empty.append(el('h2','', 'No saved projects yet'),el('p','', 'Create a sourced work process to see its complete ordered checklist here.' ));
+      const link=el('a','', 'Explain a process'); link.href='/employee/explanation-page'; empty.append(link); list.append(empty); return;
+    }
+    projects.forEach(project => {
+      const card=el('details','project-card');
+      const top=el('summary','project-top'); const heading=el('div','project-summary'); heading.append(el('h2','',project.title));
+      if(project.description) heading.append(el('p','project-desc',project.description));
+      top.append(heading,el('span','project-count',`${project.completed} of ${project.total} complete`)); card.append(top);
+      const content=el('div','project-content'); card.append(content);
+      const bar=el('progress','project-bar'); bar.max=Math.max(project.total,1); bar.value=project.completed; bar.setAttribute('aria-label',`${project.completed} of ${project.total} steps complete`); content.append(bar);
+      if(project.status==='needs_review') content.append(el('p','review-note','Partial procedure: confirm the missing sequence details with your supervisor before proceeding.'));
+      const info=el('div','info-grid');
+      const prerequisites=infoBox('Before you begin',project.prerequisites); const safety=infoBox('Safety notes',project.safety_notes,true);
+      if(prerequisites) info.append(prerequisites); if(safety) info.append(safety); if(info.childElementCount) content.append(info);
+      if(project.source) { const source=el('p','step-source',`Procedure source: ${project.source}`); content.append(source); }
+      const headingRow=el('div','steps-heading'); headingRow.append(el('h3','',`Complete procedure · ${project.total} steps`));
+      const filters=el('div','step-filters'); filters.setAttribute('aria-label','Filter steps');
+      const rows=[];
+      [['all','All'],['todo','To do'],['done','Completed']].forEach(([value,label],i)=>{
+        const button=el('button','filter-button',label); button.type='button'; button.setAttribute('aria-pressed',i===0?'true':'false');
+        button.addEventListener('click',()=>{filters.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));button.setAttribute('aria-pressed','true');rows.forEach(({row,step})=>row.hidden=value==='todo'?step.done:value==='done'?!step.done:false);}); filters.append(button);
+      });
+      headingRow.append(filters); content.append(headingRow);
+      project.steps.forEach(step=>{
+        const row=el('div',`step-row${step.done?' is-done':''}`); row.dataset.done=String(step.done);
+        row.append(el('span','step-number',String(step.number)));
+        const check=el('input','step-check'); check.type='checkbox'; check.checked=step.done; check.setAttribute('aria-label',`Mark step ${step.number} complete`);
+        const body=el('div'); body.append(el('strong','step-title',step.title),el('p','step-description',step.description));
+        if(step.source) body.append(el('small','step-source',`Source: ${step.source}`));
+        check.addEventListener('change',async()=>{
+          check.disabled=true; status.textContent='';
+          try { const update=await fetch(`/employee/steps/${step.id}/complete`,{method:'POST'}); if(!update.ok) throw new Error(); await load(); }
+          catch { status.textContent='Could not update progress. Please try again.'; check.disabled=false; check.checked=step.done; }
+        });
+        row.append(check,body); content.append(row); rows.push({row,step});
+      });
+      if(project.total>0 && project.completed===project.total) {
+        const remove=el('button','delete-checklist','Delete completed checklist'); remove.type='button';
+        remove.addEventListener('click',async()=>{
+          if(!window.confirm('Delete this completed checklist and its progress? This cannot be undone.')) return;
+          remove.disabled=true; status.textContent='';
+          try { const result=await fetch(`/employee/processes/${project.id}`,{method:'DELETE'}); if(!result.ok) throw new Error(); await load(); status.textContent='Completed checklist deleted.'; }
+          catch { status.textContent='Could not delete the checklist. Refresh and try again.'; remove.disabled=false; }
+        }); content.append(remove);
+      }
+      list.append(card);
+    });
+  }
+  load().catch(error => { list.textContent=error.message; });
+})();
+</script>
+{% endblock %}

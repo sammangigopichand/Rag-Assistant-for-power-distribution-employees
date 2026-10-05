@@ -1,0 +1,21 @@
+# Python runtime artifacts
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Generated search index and downloaded embedding model
+faiss_index/
+models/
+
+# Local logs and databases
+*.log
+*.db
+*.sqlite3
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
