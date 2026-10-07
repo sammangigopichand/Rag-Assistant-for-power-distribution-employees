@@ -849,4 +849,154 @@
         height: 100%;
         overflow-y: auto;
     }
+
+    /* Keep account details compact until the employee opens the menu. */
+    .profile-menu {
+        position: relative;
+        flex: 0 0 auto;
+    }
+
+    .profile-menu > summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .profile-menu > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .profile-menu[open] > summary {
+        border-color: #a7c9bd;
+        box-shadow: 0 0 0 3px #087f7210;
+    }
+
+    .profile-copy {
+        display: block;
+        min-width: 0;
+    }
+
+    .chat-shell .profile-name {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .profile-chevron {
+        color: #71847d;
+        font-size: 15px;
+        margin-left: 2px;
+        transition: transform .18s ease;
+    }
+
+    .profile-menu[open] .profile-chevron {
+        transform: rotate(180deg);
+    }
+
+    .profile-popover {
+        position: absolute;
+        z-index: 20;
+        top: calc(100% + 10px);
+        right: 0;
+        width: min(290px, calc(100vw - 32px));
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 16px 40px #18343c1c;
+    }
+
+    .profile-identity {
+        display: grid;
+        gap: 3px;
+        padding: 12px;
+        margin-bottom: 5px;
+        border-bottom: 1px solid #edf1ef;
+    }
+
+    .profile-identity strong {
+        overflow-wrap: anywhere;
+        font-size: 13px;
+    }
+
+    .profile-identity span,
+    .profile-identity small {
+        overflow-wrap: anywhere;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .profile-identity small {
+        color: var(--teal);
+        font-weight: 650;
+    }
+
+    .profile-popover a {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        color: var(--ink);
+        font-size: 12px;
+        font-weight: 550;
+        text-decoration: none;
+    }
+
+    .profile-popover a:hover {
+        background: #f1f6f3;
+        color: var(--teal);
+    }
+
+    .profile-popover .profile-signout {
+        margin-top: 4px;
+        border-top: 1px solid #edf1ef;
+        border-radius: 0 0 8px 8px;
+        color: #9a4938;
+    }
+
+    .profile-popover .profile-signout:hover {
+        background: #fff4f1;
+        color: #853a2b;
+    }
+
+    .chat-shell .topbar {
+        position: relative;
+        z-index: 5;
+    }
+
+    .chat-shell .nav-label {
+        font-weight: 700;
+    }
+
+    .chat-shell .nav-item {
+        transition: background .16s ease, color .16s ease, transform .16s ease;
+    }
+
+    .chat-shell .nav-item:hover {
+        transform: translateX(2px);
+    }
+
+    .chat-shell .suggestion {
+        min-height: 112px;
+    }
+
+    .chat-shell .answer-response {
+        overflow-wrap: anywhere;
+    }
+
+    @media(max-width:720px) {
+        .chat-shell .profile {
+            padding: 5px 8px 5px 5px;
+        }
+
+        .chat-shell .profile-chevron {
+            display: none;
+        }
+
+        .profile-popover {
+            top: calc(100% + 7px);
+        }
+    }
 </style>

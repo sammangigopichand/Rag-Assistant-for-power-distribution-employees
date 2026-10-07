@@ -13,7 +13,7 @@
 <main style="max-width:1000px;margin:0 auto;padding:30px 22px 60px;font-family:system-ui,sans-serif;color:#17343c">
   <header style="display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:10px 0 24px;border-bottom:1px solid #dce7e1">
     <div><div style="font-size:12px;letter-spacing:.12em;color:#52717a">RAG PROCESS EXPLANATION</div><h1 style="margin:6px 0">Understand the work before you start</h1><p style="margin:0;color:#60766c">The assistant searches utility documents and explains the retrieved procedure with sources.</p></div>
-    <nav class="explanation-nav" aria-label="Employee navigation"><span class="employee-chip"><span class="employee-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span>{{ user.name }}</span><a href="/dashboard">My progress</a><a href="/employee/assistant">Knowledge assistant</a><a href="/logout">Sign out</a></nav>
+  <nav class="explanation-nav" aria-label="Employee navigation"><span class="employee-chip"><span class="employee-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span>{{ user.name }}</span><a href="/employee/progress-page">My progress</a><a href="/employee/assistant">Knowledge assistant</a><a href="/logout">Sign out</a></nav>
   </header>
   <form id="explanation-form" style="margin:24px 0;padding:20px;background:white;border:1px solid #dce7e1;border-radius:14px">
     <label for="work-question" style="display:block;font-weight:650;margin-bottom:8px">Describe the work process you need explained</label>
@@ -62,7 +62,7 @@
         const response=await fetch('/employee/processes/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({save_token:data.save_token})});
         const saved=await response.json(); if(!response.ok) throw new Error(saved.detail||'Could not save this process.');
         save.remove(); status.textContent='Process added to your progress.';
-        const link=document.createElement('a'); link.href='/dashboard'; link.textContent='Open project progress'; link.style.cssText='display:inline-block;margin-top:16px;padding:11px 14px;background:#087f72;color:white;text-decoration:none;border-radius:8px;font-weight:650'; card.append(link);
+      const link=document.createElement('a'); link.href='/employee/progress-page'; link.textContent='Open project progress'; link.style.cssText='display:inline-block;margin-top:16px;padding:11px 14px;background:#087f72;color:white;text-decoration:none;border-radius:8px;font-weight:650'; card.append(link);
       } catch(error) { status.textContent=error.message; save.disabled=false; }
     });
     card.append(save);

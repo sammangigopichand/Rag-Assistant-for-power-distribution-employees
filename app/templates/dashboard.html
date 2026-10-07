@@ -58,7 +58,7 @@ Utility Knowledge Assistant
                 Knowledge assistant
             </a>
 
-            <a class="nav-item" href="/dashboard"><span aria-hidden="true">&#9745;</span>Project progress</a>
+            <a class="nav-item" href="/employee/progress-page"><span aria-hidden="true">&#9745;</span>Project progress</a>
             <a class="nav-item" href="/employee/explanation-page"><span aria-hidden="true">&#10022;</span>Explain a process with RAG</a>
 
         </nav>
@@ -136,28 +136,26 @@ Utility Knowledge Assistant
             </div>
 
 
-            <div class="profile">
-
-                <div
-                    class="avatar"
-                    aria-hidden="true"
-                >
-                    {{ user.name[:1]|upper }}
+            <details class="profile-menu">
+                <summary class="profile" aria-label="Account menu for {{ user.name }}">
+                    <span class="avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span>
+                    <span class="profile-copy">
+                        <span class="profile-name">{{ user.name }}</span>
+                        <small>{{ user.role|title }} account</small>
+                    </span>
+                    <span class="profile-chevron" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="profile-popover">
+                    <div class="profile-identity">
+                        <strong>{{ user.name }}</strong>
+                        <span>{{ user.email }}</span>
+                        <small>{{ user.role|title }} workspace</small>
+                    </div>
+                    <a href="/dashboard">Project progress <span aria-hidden="true">↗</span></a>
+                    <a href="/employee/explanation-page">Explain a process <span aria-hidden="true">↗</span></a>
+                    <a class="profile-signout" href="/logout">Sign out <span aria-hidden="true">↗</span></a>
                 </div>
-
-
-                <div
-                    class="profile-name"
-                    title="{{ user.email }}"
-                >
-                    {{ user.name }}
-
-                    <small>
-                        {{ user.role|title }} account
-                    </small>
-                </div>
-
-            </div>
+            </details>
 
         </header>
 
