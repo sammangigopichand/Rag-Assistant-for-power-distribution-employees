@@ -2,11 +2,11 @@
 from sqlalchemy import inspect, text
 from pathlib import Path
 import sys
-import os
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.database import engine
+from app.admin_config import configured_admin_emails
 
 
 def migrate():
@@ -28,9 +28,13 @@ def migrate():
                 connection.execute(text("ALTER TABLE work_processes ADD COLUMN status VARCHAR(24) NOT NULL DEFAULT 'ready'"))
         if "work_steps" in tables and "source_document" not in {c["name"] for c in inspector.get_columns("work_steps")}:
             connection.execute(text("ALTER TABLE work_steps ADD COLUMN source_document VARCHAR(300)"))
-        admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
-        if admin_email and "users" in tables:
-            connection.execute(text("UPDATE users SET role = 'admin' WHERE lower(email) = :email"), {"email": admin_email})
+        admin_emails = configured_admin_emails()
+        if admin_emails and "users" in tables:
+            for admin_email in admin_emails:
+                connection.execute(
+                    text("UPDATE users SET role = 'admin' WHERE lower(email) = :email"),
+                    {"email": admin_email},
+                )
     print("Role and checklist ownership migration complete.")
 
 

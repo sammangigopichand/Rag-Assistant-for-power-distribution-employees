@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.admin_config import configured_admin_emails
 from app.models import User, WorkProcess, WorkStep, EmployeeProgress
 from app.schemas import UserRegister
 from app.auth import hash_password
@@ -72,7 +73,7 @@ def register_user(
         name=user_data.name,
         email=user_data.email,
         password_hash=hash_password(user_data.password),
-        role=("admin" if user_data.email.lower() == os.getenv("ADMIN_EMAIL", "").lower() and os.getenv("ADMIN_EMAIL") else "employee")
+        role=("admin" if user_data.email.strip().casefold() in configured_admin_emails() else "employee")
     )
 
     db.add(new_user)
